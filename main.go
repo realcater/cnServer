@@ -31,5 +31,5 @@ func main() {
 	r.PUT("/questions/:id", UpdateQuestion)
 	r.DELETE("/questions/:id", DeleteQuestion)
 
-	r.RunTLS(":8080", "lh_cert.pem", "lh_key.pem")
+	r.RunTLS(":8080", "cert.pem", "key.pem")
 }

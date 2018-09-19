@@ -66,7 +66,6 @@ func CreateNewUser(c *gin.Context, loginData LoginData) {
 	GiveUserAToken(c, &user)
 	answer := APIAnswer{user.Username, true, true, user.Token}
 	c.JSON(http.StatusOK, answer)
-
 }
 
 // GiveUserAToken :
