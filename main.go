@@ -24,10 +24,10 @@ func main() {
 	db.AutoMigrate(&User{}, &Question{})
 
 	r := gin.Default()
-	r.GET("/questions/", GetQuestions)
+	r.POST("/login", Login)
+	r.GET("/questions/", GetAllQuestions)
 	r.GET("/questions/:id", GetQuestion)
 	r.POST("/questions", CreateQuestion)
-	r.POST("/login", Login)
 	r.PUT("/questions/:id", UpdateQuestion)
 	r.DELETE("/questions/:id", DeleteQuestion)
 
