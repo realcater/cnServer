@@ -41,37 +41,41 @@ type APIAnswer struct {
 func Login(c *gin.Context) {
 	var user User
 	var loginData LoginData
+	var answer APIAnswer
+	var httpStatus int
 	c.BindJSON(&loginData)
 	if err := db.Where("username = ?", loginData.Username).First(&user).Error; err != nil {
-		createNewUser(c, loginData)
+		httpStatus, answer = createNewUser(loginData)
 	} else {
-		checkUser(c, &user, loginData)
+		httpStatus, answer = checkUser(&user, loginData)
 	}
+	c.JSON(httpStatus, answer)
 }
 
-func checkUser(c *gin.Context, user *User, loginData LoginData) {
+func checkUser(user *User, loginData LoginData) (httpStatus int, answer APIAnswer) {
 	if checkHash(loginData.Password, user.HashAndSalt) {
-		giveUserAToken(c, user)
-		answer := APIAnswer{user.Username, true, false, user.Token}
-		c.JSON(http.StatusOK, answer)
+		giveUserAToken(user)
+		answer = APIAnswer{user.Username, true, false, user.Token}
+		httpStatus = http.StatusOK
 	} else {
-		answer := APIAnswer{user.Username, false, false, ""}
-		c.JSON(http.StatusUnauthorized, answer)
+		answer = APIAnswer{user.Username, false, false, ""}
+		httpStatus = http.StatusUnauthorized
 	}
+	return
 }
 
-func createNewUser(c *gin.Context, loginData LoginData) {
+func createNewUser(loginData LoginData) (httpStatus int, answer APIAnswer) {
 	var user User
 	user.Username = loginData.Username
 	user.HashAndSalt = makeHashAndSalt(loginData.Password)
 	db.Create(&user)
 
-	giveUserAToken(c, &user)
-	answer := APIAnswer{user.Username, true, true, user.Token}
-	c.JSON(http.StatusOK, answer)
+	giveUserAToken(&user)
+	answer = APIAnswer{user.Username, true, true, user.Token}
+	return
 }
 
-func giveUserAToken(c *gin.Context, user *User) {
+func giveUserAToken(user *User) {
 	user.Token = base64.StdEncoding.EncodeToString(randomBytes(tokenLength))
 	db.Save(user)
 }

@@ -12,7 +12,7 @@ var db *gorm.DB
 var err error
 
 func main() {
-	db, err = gorm.Open("mysql", "root:1234@tcp(127.0.0.1:3306)/chgk?charset=utf8&parseTime=True&loc=Local")
+	db, err = gorm.Open("mysql", "root:asd890@tcp(127.0.0.1:3306)/chgk?charset=utf8&parseTime=True&loc=Local")
 	db.Set("gorm:table_options", "charset=utf8")
 	if err != nil {
 		fmt.Println(err)
