@@ -1,4 +1,7 @@
-curl -i -X POST --cacert cert.pem https://localhost:8080/questions -H "Token: pQFanoT3/+UrF0BS" -d '{ "Question" : "Кто?", "Answer" : "Грека78"}'
+curl -i -X POST --cacert cert.pem https://localhost:8080/questions -H "Token: s1AjwKujG+m5vElzz+NsU32mtEoY7pahMO8i+INdrC15yzarGtGyCtEaSSxE6ltSn/yxrcJ/Y5hE+CWSpg/xlQ==" -d '{ "Question" : "Кто?", "Answer" : "Грека78"}'
+curl -i -X GET --cacert cert.pem https://localhost:8080/questions -H "Token: s1AjwKujG+m5vElzz+NsU32mtEoY7pahMO8i+INdrC15yzarGtGyCtEaSSxE6ltSn/yxrcJ/Y5hE+CWSpg/xlQ=="
+curl -i -X PUT --cacert cert.pem https://localhost:8080/questions/2 -H "Token: s1AjwKujG+m5vElzz+NsU32mtEoY7pahMO8i+INdrC15yzarGtGyCtEaSSxE6ltSn/yxrcJ/Y5hE+CWSpg/xlQ==" -d '{ "Question" : "Кому?", "Answer" : "Греке"}'
+curl -i -X DELETE --cacert cert.pem https://localhost:8080/questions/1 -H "Token: s1AjwKujG+m5vElzz+NsU32mtEoY7pahMO8i+INdrC15yzarGtGyCtEaSSxE6ltSn/yxrcJ/Y5hE+CWSpg/xlQ=="
 
 mysql -u root -p
 

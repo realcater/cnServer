@@ -1,14 +1,11 @@
 package main
 
-// only need mysql OR sqlite
-// both are included here for reference
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	//"golang.org/x/crypto/pbkdf2"
 )
 
 var db *gorm.DB
@@ -25,7 +22,7 @@ func main() {
 
 	r := gin.Default()
 	r.POST("/login", Login)
-	r.GET("/questions/", GetAllQuestions)
+	r.GET("/questions", GetAllQuestions)
 	r.GET("/questions/:id", GetQuestion)
 	r.POST("/questions", CreateQuestion)
 	r.PUT("/questions/:id", UpdateQuestion)
