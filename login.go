@@ -3,23 +3,24 @@ package main
 // only need mysql OR sqlite
 // both are included here for reference
 import (
-	//"fmt"
 	"crypto/rand"
+	"crypto/sha1"
+	"crypto/subtle"
 	"encoding/base64"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"golang.org/x/crypto/pbkdf2"
 	"net/http"
 	"time"
 )
 
 // User :
 type User struct {
-	Username     string `gorm:"primary_key"`
-	HashPassword string
-	Token        string `gorm:"unique_index"`
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	Username    string `gorm:"primary_key"`
+	HashAndSalt string
+	Token       string `gorm:"unique_index"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 // LoginData :
@@ -42,16 +43,15 @@ func Login(c *gin.Context) {
 	var loginData LoginData
 	c.BindJSON(&loginData)
 	if err := db.Where("username = ?", loginData.Username).First(&user).Error; err != nil {
-		CreateNewUser(c, loginData)
+		createNewUser(c, loginData)
 	} else {
-		CheckUser(c, &user, loginData)
+		checkUser(c, &user, loginData)
 	}
 }
 
-// CheckUser :
-func CheckUser(c *gin.Context, user *User, loginData LoginData) {
-	if user.HashPassword == loginData.Password {
-		GiveUserAToken(c, user)
+func checkUser(c *gin.Context, user *User, loginData LoginData) {
+	if checkHash(loginData.Password, user.HashAndSalt) {
+		giveUserAToken(c, user)
 		answer := APIAnswer{user.Username, true, false, user.Token}
 		c.JSON(http.StatusOK, answer)
 	} else {
@@ -60,49 +60,44 @@ func CheckUser(c *gin.Context, user *User, loginData LoginData) {
 	}
 }
 
-// CreateNewUser :
-func CreateNewUser(c *gin.Context, loginData LoginData) {
+func createNewUser(c *gin.Context, loginData LoginData) {
 	var user User
 	user.Username = loginData.Username
-	user.HashPassword = loginData.Password
+	user.HashAndSalt = makeHashAndSalt(loginData.Password)
 	db.Create(&user)
 
-	GiveUserAToken(c, &user)
+	giveUserAToken(c, &user)
 	answer := APIAnswer{user.Username, true, true, user.Token}
 	c.JSON(http.StatusOK, answer)
 }
 
-// CheckToken :
-func CheckToken(c *gin.Context) bool {
-	var user User
-	token := c.GetHeader("Token")
-	if token == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": noTokenMessage})
-		return false
-	}
-	if err := db.Where("token = ?", token).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": invalidTokenMessage})
-		return false
-	}
-	if user.UpdatedAt.Add(tokenExpireTime).Before(time.Now()) {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": expiredTokenMessage})
-		return false
-	}
-	return true
-}
-
-// GiveUserAToken :
-func GiveUserAToken(c *gin.Context, user *User) {
-	user.Token = GenerateToken()
+func giveUserAToken(c *gin.Context, user *User) {
+	user.Token = base64.StdEncoding.EncodeToString(randomBytes(tokenLength))
 	db.Save(user)
 }
 
-// GenerateToken :
-func GenerateToken() string {
-	randomBytes := make([]byte, 12)
-	_, err := rand.Read(randomBytes)
+func makeHashAndSalt(password string) string {
+	salt := randomBytes(passwordSecuritySaltSize)
+	hash := makeHash(password, salt)
+	return base64.StdEncoding.EncodeToString(append(salt, hash...))
+}
+
+func checkHash(password, hashAndSalt string) bool {
+	bytesHashAndSalt, _ := base64.StdEncoding.DecodeString(hashAndSalt)
+	salt := bytesHashAndSalt[:passwordSecuritySaltSize]
+	hash := bytesHashAndSalt[passwordSecuritySaltSize:]
+	return subtle.ConstantTimeCompare(makeHash(password, salt), hash) == 1
+}
+
+func makeHash(password string, salt []byte) []byte {
+	return pbkdf2.Key([]byte(password), salt, passwordSecurityIteration, passwordSecurityKeyLen, sha1.New)
+}
+
+func randomBytes(len int) []byte {
+	bytes := make([]byte, len)
+	_, err := rand.Read(bytes)
 	if err != nil {
 		panic(err)
 	}
-	return base64.StdEncoding.EncodeToString(randomBytes)
+	return bytes
 }
