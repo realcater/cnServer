@@ -1,5 +1,0 @@
-curl -i -X POST --cacert cert.pem https://localhost:8080/questions -H "Token: pQFanoT3/+UrF0BS" -d '{ "Question" : "Кто?", "Answer" : "Грека78"}'
-
-mysql -u root -p
-
-curl -i -X POST --cacert cert.pem https://localhost:8080/login -d '{"Username" : "realcater", "Password" : "leoleo"}'
