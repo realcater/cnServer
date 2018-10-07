@@ -8,6 +8,12 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
+/*
+type server struct {
+	db     *gorm.DB
+	routes *gin.Engine
+}
+*/
 var db *gorm.DB
 var err error
 
@@ -22,11 +28,15 @@ func main() {
 
 	r := gin.Default()
 	r.POST("/login", Login)
-	r.GET("/questions", GetAllQuestions)
-	r.GET("/questions/:id", GetQuestion)
-	r.POST("/questions", CreateQuestion)
-	r.PUT("/questions/:id", UpdateQuestion)
-	r.DELETE("/questions/:id", DeleteQuestion)
 
+	checkTokenGroup := r.Group("/")
+	checkTokenGroup.Use(CheckToken())
+	{
+		checkTokenGroup.GET("/questions", GetAllQuestions)
+		checkTokenGroup.GET("/questions/:id", GetQuestion)
+		checkTokenGroup.POST("/questions", CreateQuestion)
+		checkTokenGroup.PUT("/questions/:id", UpdateQuestion)
+		checkTokenGroup.DELETE("/questions/:id", DeleteQuestion)
+	}
 	r.RunTLS(":8080", "cert.pem", "key.pem")
 }
