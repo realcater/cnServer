@@ -8,17 +8,14 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
-/*
-type server struct {
-	db     *gorm.DB
-	routes *gin.Engine
+// Server :
+type Server struct {
+	db    *gorm.DB
+	route *gin.Engine
 }
-*/
-var db *gorm.DB
-var err error
 
 func main() {
-	db, err = gorm.Open("mysql", "root:asd890@tcp(127.0.0.1:3306)/chgk?charset=utf8&parseTime=True&loc=Local")
+	db, err := gorm.Open("mysql", "root:asd890@tcp(127.0.0.1:3306)/chgk?charset=utf8&parseTime=True&loc=Local")
 	db.Set("gorm:table_options", "charset=utf8")
 	if err != nil {
 		fmt.Println(err)
@@ -26,17 +23,17 @@ func main() {
 	defer db.Close()
 	db.AutoMigrate(&User{}, &Question{})
 
-	r := gin.Default()
-	r.POST("/login", Login)
+	s := Server{db, gin.Default()}
+	s.route.POST("/login", s.Login)
 
-	checkTokenGroup := r.Group("/")
-	checkTokenGroup.Use(CheckToken())
+	checkTokenGroup := s.route.Group("/")
+	checkTokenGroup.Use(s.CheckToken())
 	{
-		checkTokenGroup.GET("/questions", GetAllQuestions)
-		checkTokenGroup.GET("/questions/:id", GetQuestion)
-		checkTokenGroup.POST("/questions", CreateQuestion)
-		checkTokenGroup.PUT("/questions/:id", UpdateQuestion)
-		checkTokenGroup.DELETE("/questions/:id", DeleteQuestion)
+		checkTokenGroup.GET("/questions", s.GetAllQuestions)
+		checkTokenGroup.GET("/questions/:id", s.GetQuestion)
+		checkTokenGroup.POST("/questions", s.CreateQuestion)
+		checkTokenGroup.PUT("/questions/:id", s.UpdateQuestion)
+		checkTokenGroup.DELETE("/questions/:id", s.DeleteQuestion)
 	}
-	r.RunTLS(":8080", "cert.pem", "key.pem")
+	s.route.RunTLS(":8080", "cert.pem", "key.pem")
 }
